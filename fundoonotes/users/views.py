@@ -1,58 +1,55 @@
 """
 * @Author: Sachin S Kore
-* @Date: 2022-1-11
-* @Title : Fundoo Notes User authenticate
+* @Date: 2022-1-17
+* @Title : Fundoo Notes User serializer
 """
 import json
-
-from django.http import JsonResponse
-from django.http import HttpResponse
-from django.views.decorators.csrf import csrf_exempt
+from loghandler import logger
 from django.contrib.auth.models import auth
-from .models import User
+# third party imports
+
+from rest_framework import status
+from rest_framework.response import Response
+from rest_framework.views import APIView
+from .serializers import UserSerializer
 
 
-@csrf_exempt
-def user_registration(request):
-    """
-    Description:
-        This method is writing Registration of user
-    Parameter:
-        using Dictionary
-    """
+class UserRegistration(APIView):
 
+    def post(self, request):
+        """
+            Description:
+                This method is writing Registration of user to inserting data
+            Parameter:
+                using json
+            :return : Response
+        """
+        try:
+            serializer = UserSerializer(data=request.data)
+            if serializer.is_valid():
+                serializer.create(validate_data=serializer.data)
+                return Response({"message": "User Creating Successfully ", "data": serializer.data["username"]})
+        except Exception as e:
+            logger.error(e)
+            return Response({"message": "invalidate credentials"}, status=status.HTTP_400_BAD_REQUEST)
+
+
+class Login(APIView):
     try:
-
-        if request.method == "POST":
+        def post(self, request):
+            """
+                Description:
+                        This method is writing Login of user
+                Parameter:
+                        using Dictionary
+            """
             data = json.loads(request.body)
-            username = data.get("username")
-            email = data.get("email")
+            user = auth.authenticate(username=data.get("username"), password=data.get("password"))
 
-            if User.objects.filter(username=username).exists():
-                return JsonResponse({"message":"Username is already Take","data":{"username": username}})
-            elif User.objects.filter(email=email).exists():
-                return JsonResponse({"message":"email is already Take","data":{"email": email}})
+            if user is not None:
+                return Response({"message": "login successfully", "data": data})
             else:
-                user = User.objects.create_user(username=username, first_name=data.get("first_name"), last_name=data.get("last_name"),
-                                                password=data.get("password"), email=email,age=data.get("age"), mobile=data.get("mobile"))
-                user.save()
-                return JsonResponse({"message":"User data Successfully Sava","data": data})
+                return Response({"message": "User is invalid", "data": data})
+
     except Exception as e:
-        return HttpResponse("Data is invalid",e)
-
-
-def login(request):
-    """
-        Description:
-            This method is writing Login of user
-        Parameter:
-            using Dictionary
-    """
-    if request.method == "POST":
-        data = json.loads(request.body)
-        user = auth.authenticate(username=data.get("username"), password=data.get("password"))
-
-        if user is not None:
-            return JsonResponse({"message":"login successfully","data": data})
-        else:
-            return JsonResponse({"message":"User is invalid","data": data})
+              Response(e)
