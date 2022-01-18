@@ -28,7 +28,7 @@ class UserRegistration(APIView):
             serializer = UserSerializer(data=request.data)
             if serializer.is_valid():
                 serializer.create(validate_data=serializer.data)
-                return Response({"message": "User Creating Successfully ", "data": serializer.data["username"]})
+                return Response({"message": "User Creating Successfully ", "data": serializer.data["username"]},status=status.HTTP_201_CREATED)
         except Exception as e:
             logger.error(e)
             return Response({"message": "invalidate credentials"}, status=status.HTTP_400_BAD_REQUEST)
@@ -47,9 +47,12 @@ class Login(APIView):
             user = auth.authenticate(username=data.get("username"), password=data.get("password"))
 
             if user is not None:
-                return Response({"message": "login successfully", "data": data})
+                user.save()
+                serializer = UserSerializer(user)
+                return Response({"message": "login successfully", "data": serializer.data},status=status.HTTP_201_CREATED)
             else:
-                return Response({"message": "User is invalid", "data": data})
+                return Response({"message": "User is invalid", "data": data},status=status.HTTP_400_BAD_REQUEST)
 
     except Exception as e:
-              Response(e)
+        logger.error(e)
+
