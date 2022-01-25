@@ -4,6 +4,9 @@
 * @Title : Fundoo Notes User serializer
 """
 import json
+
+from rest_framework.exceptions import ValidationError
+
 from loghandler import logger
 from django.contrib.auth.models import auth
 # third party imports
@@ -26,33 +29,36 @@ class UserRegistration(APIView):
         """
         try:
             serializer = UserSerializer(data=request.data)
-            if serializer.is_valid():
+            if serializer.is_valid(raise_exception=True):
                 serializer.create(validate_data=serializer.data)
-                return Response({"message": "User Creating Successfully ", "data": serializer.data["username"]},status=status.HTTP_201_CREATED)
+                return Response({"message": "User Creating Successfully ", "data": serializer.data["username"]},
+                                status=status.HTTP_201_CREATED)
+        except ValidationError as e:
+            logger.error(e)
+            return Response({"message": "invalidate credentials"}, status=status.HTTP_400_BAD_REQUEST)
         except Exception as e:
             logger.error(e)
             return Response({"message": "invalidate credentials"}, status=status.HTTP_400_BAD_REQUEST)
 
 
 class Login(APIView):
-    try:
-        def post(self, request):
-            """
+    def post(self, request):
+        """
                 Description:
                         This method is writing Login of user
                 Parameter:
                         using Dictionary
             """
+        try:
             data = json.loads(request.body)
             user = auth.authenticate(username=data.get("username"), password=data.get("password"))
-
             if user is not None:
-                user.save()
-                serializer = UserSerializer(user)
-                return Response({"message": "login successfully", "data": serializer.data},status=status.HTTP_201_CREATED)
+                return Response({"message": "login successfully"}, status=status.HTTP_200_OK)
             else:
-                return Response({"message": "User is invalid", "data": data},status=status.HTTP_400_BAD_REQUEST)
-
-    except Exception as e:
-        logger.error(e)
-
+                return Response({"message": "User is invalid", "data": data}, status=status.HTTP_400_BAD_REQUEST)
+        except ValidationError as e:
+            logger.error(e)
+            return Response({"message": "invalidate credentials"}, status=status.HTTP_403_FORBIDDEN)
+        except Exception as e:
+            logger.error(e)
+            return Response({"message": "User is invalid"}, status=status.HTTP_403_FORBIDDEN)
