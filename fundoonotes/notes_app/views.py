@@ -51,7 +51,7 @@ class NotesAPIView(APIView):
 
             notes = Notes.objects.filter(user_id = request.GET.get("user_id"))
             serializer = NotesSerializer(notes, many=True)
-            RedisOperations().get_to_cash(request.GET.get("user_id"))
+            RedisOperations().get_to_cashe(request.GET.get("user_id"))
             return Response({"message": "get Note Data  Successfully ","data": serializer.data},status=status.HTTP_201_CREATED)
         except Exception as e:
             logger.error(e)

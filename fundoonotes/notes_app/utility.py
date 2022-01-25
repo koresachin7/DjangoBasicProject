@@ -24,7 +24,7 @@ class RedisOperations:
             logger.error(e)
             raise e
 
-    def get_to_cash(self, user_id):
+    def get_to_cashe(self, user_id):
         """
             Description:
                     this method is using cash data in redis DB
