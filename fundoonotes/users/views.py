@@ -15,6 +15,7 @@ from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from .serializers import UserSerializer
+from .task import send_mail
 
 
 class UserRegistration(APIView):
@@ -31,12 +32,14 @@ class UserRegistration(APIView):
             serializer = UserSerializer(data=request.data)
             if serializer.is_valid(raise_exception=True):
                 serializer.create(validate_data=serializer.data)
+                send_mail.delay(serializer.data.get("email"))
                 return Response({"message": "User Creating Successfully ", "data": serializer.data["username"]},
                                 status=status.HTTP_201_CREATED)
         except ValidationError as e:
             logger.error(e)
-            return Response({"message": "invalidate credentials"}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"message": "validation error"}, status=status.HTTP_400_BAD_REQUEST)
         except Exception as e:
+            print(e)
             logger.error(e)
             return Response({"message": "invalidate credentials"}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -58,7 +61,7 @@ class Login(APIView):
                 return Response({"message": "User is invalid", "data": data}, status=status.HTTP_400_BAD_REQUEST)
         except ValidationError as e:
             logger.error(e)
-            return Response({"message": "invalidate credentials"}, status=status.HTTP_403_FORBIDDEN)
+            return Response({"message": "validation error"}, status=status.HTTP_403_FORBIDDEN)
         except Exception as e:
             logger.error(e)
             return Response({"message": "User is invalid"}, status=status.HTTP_403_FORBIDDEN)
