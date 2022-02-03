@@ -1,4 +1,7 @@
 import json
+
+from django.core.exceptions import ObjectDoesNotExist
+
 from notes_app.redis import Redis
 from loghandler import logger
 
@@ -32,7 +35,56 @@ class RedisOperations:
             :return: Redis cache data
         """
         try:
-            Redis().redis.get(user_id)
+            notes_list = Redis().redis.get(user_id)
+            return notes_list
         except Exception as e:
             logger.error(e)
             raise e
+
+    def put_to_cashe(self, user_id, update_data):
+        """
+            Description:
+                    this method is using cash data in redis DB
+            :param : user_id update_data
+            :return: Redis cache update data
+        """
+        note_list = Redis().redis_get(user_id)
+        load_list = json.loads(note_list)
+        if load_list is None:
+            Redis().redis.set(user_id, json.dumps([update_data]))
+            return
+        for note in load_list:
+            if update_data.get("id") == note.get("id"):
+                note.update(update_data)
+                Redis().redis.set(user_id, json.dumps(load_list))
+                return
+        else:
+            raise ObjectDoesNotExist
+
+    def delete_to_cashe(self,pk,user_id):
+        """
+           Description:
+                    this method is using cash data in redis DB
+            :param : pk user_id
+            :return: Redis delete update data
+        """
+        note_list = Redis().redis.get(user_id)
+        load_list = json.loads(note_list)
+        print(load_list)
+        if note_list is None:
+            raise ObjectDoesNotExist
+        count = 0
+        for note in load_list:
+            count += 1
+            if note.get("id") == pk:
+                load_list.pop(count-1)
+                Redis().redis.set(user_id, json.dumps(load_list))
+                return
+        else:
+            raise ObjectDoesNotExist
+
+
+
+
+
+

@@ -1,6 +1,6 @@
 """
 * @Author: Sachin S Kore
-* @Date: 2022-1-19
+* @Date: 2022-2-02
 * @Title : CRUD operation in class function
 """
 import json
@@ -32,11 +32,10 @@ class NotesAPIView(APIView):
             serializer = NotesSerializer(data=request.data)
             serializer.is_valid(raise_exception=True)
             serializer.save()
-            RedisOperations().post_to_cache(request.data.get("user_id"), json.dumps(serializer.data))
+            RedisOperations().post_to_cache(request.data.get("user_id"), serializer.data)
             return Response({"message": "Note Creating Successfully ", "data": serializer.data},
                             status=status.HTTP_201_CREATED)
         except Exception as e:
-            print(e)
             logger.error(e)
             return Response({"message": "invalidate credentials"}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -48,14 +47,18 @@ class NotesAPIView(APIView):
            :return: Response
         """
         try:
-
-            notes = Notes.objects.filter(user_id = request.GET.get("user_id"))
-            serializer = NotesSerializer(notes, many=True)
-            RedisOperations().get_to_cashe(request.GET.get("user_id"))
-            return Response({"message": "get Note Data  Successfully ","data": serializer.data},status=status.HTTP_201_CREATED)
+            notes_list = RedisOperations().get_to_cashe(request.GET.get("user_id"))
+            if notes_list is not None:
+                return Response({"message": "get Note Data in cache DB  Successfully ", "data": json.loads(notes_list)},
+                                status=status.HTTP_201_CREATED)
+            else:
+                notes = Notes.objects.filter(user_id=request.GET.get("user_id"))
+                serializer = NotesSerializer(notes, many=True)
+                return Response({"message": "get Note Data  Successfully ", "data": serializer.data},
+                                status=status.HTTP_201_CREATED)
         except Exception as e:
             logger.error(e)
-            return Response({"message": "invalidate credentials"},status=status.HTTP_400_BAD_REQUEST)
+            return Response({"message": "invalidate credentials"}, status=status.HTTP_400_BAD_REQUEST)
 
     def put(self, request):
         """
@@ -70,7 +73,7 @@ class NotesAPIView(APIView):
             serializer = NotesSerializer(instance=notes, data=request.data)
             serializer.is_valid(raise_exception=True)
             serializer.save()
-            # Redis().redis_put(request.data.get("id"), json.dumps(serializer.data))
+            RedisOperations().put_to_cashe(request.data.get("user_id"), serializer.data)
             return Response({"message": "Note Update Successfully ", "data": serializer.data},
                             status=status.HTTP_201_CREATED)
         except Exception as e:
@@ -89,9 +92,10 @@ class NotesAPIView(APIView):
             notes = Notes.objects.get(id=request.data.get("id"))
             if notes is not None:
                 notes.delete()
+                RedisOperations().delete_to_cashe(request.data.get("id"), request.data.get("user_id"))
                 return Response({"message": "Delete successfully"}, status=status.HTTP_200_OK)
             else:
                 return Response({"message": "ID is invalid"}, status=status.HTTP_403_FORBIDDEN)
         except Exception as e:
-               logger.error(e)
-               return Response({"message": "invalidate credentials"}, status=status.HTTP_400_BAD_REQUEST)
+            logger.error(e)
+            return Response({"message": "invalidate credentials"}, status=status.HTTP_400_BAD_REQUEST)
