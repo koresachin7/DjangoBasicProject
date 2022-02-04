@@ -12,14 +12,14 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from notes_app.serializers import NotesSerializer
 from notes_app.models import Notes
-from notes_app.utility import RedisOperations
+from notes_app.utility import RedisOperations, verify_token
 
 
 class NotesAPIView(APIView):
     """
         Description: This Class using for Note app Operation
     """
-
+    @verify_token
     def post(self, request):
         """
             Description:
@@ -39,6 +39,7 @@ class NotesAPIView(APIView):
             logger.error(e)
             return Response({"message": "invalidate credentials"}, status=status.HTTP_400_BAD_REQUEST)
 
+    @verify_token
     def get(self, request):
         """
            Description:
@@ -47,19 +48,21 @@ class NotesAPIView(APIView):
            :return: Response
         """
         try:
-            notes_list = RedisOperations().get_to_cashe(request.GET.get("user_id"))
+            notes_list = RedisOperations().get_to_cashe(request.data.get("user_id"))
             if notes_list is not None:
                 return Response({"message": "get Note Data in cache DB  Successfully ", "data": json.loads(notes_list)},
                                 status=status.HTTP_201_CREATED)
             else:
-                notes = Notes.objects.filter(user_id=request.GET.get("user_id"))
+                notes = Notes.objects.filter(user_id=request.data.get("user_id"))
                 serializer = NotesSerializer(notes, many=True)
                 return Response({"message": "get Note Data  Successfully ", "data": serializer.data},
                                 status=status.HTTP_201_CREATED)
         except Exception as e:
             logger.error(e)
+            print(e)
             return Response({"message": "invalidate credentials"}, status=status.HTTP_400_BAD_REQUEST)
 
+    @verify_token
     def put(self, request):
         """
            Description:
@@ -80,6 +83,7 @@ class NotesAPIView(APIView):
             logger.error(e)
             return Response({"message": "invalidate credentials"}, status=status.HTTP_400_BAD_REQUEST)
 
+    @verify_token
     def delete(self, request):
         """
            Description:
