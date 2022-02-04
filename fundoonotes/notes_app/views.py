@@ -70,7 +70,6 @@ class NotesAPIView(APIView):
            :param request: format of the request
            :return: Response
         """
-
         try:
             notes = Notes.objects.get(id=request.data.get("id"))
             serializer = NotesSerializer(instance=notes, data=request.data)
