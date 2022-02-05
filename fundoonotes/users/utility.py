@@ -3,12 +3,7 @@ import jwt, datetime
 
 class UserViwe:
     @staticmethod
-    def encode(id):
-        payload = {
-            'user_id': id,
-            'exp': datetime.datetime.utcnow() + datetime.timedelta(minutes=60),
-            'iat': datetime.datetime.utcnow()
-        }
+    def encode(payload):
         token = jwt.encode(payload, 'secret', algorithm='HS256')
         return token
 
