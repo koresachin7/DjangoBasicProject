@@ -63,7 +63,7 @@ class RedisOperations:
         else:
             raise ObjectDoesNotExist
 
-    def delete_to_cashe(self,pk,user_id):
+    def delete_to_cashe(self, pk, user_id):
         """
            Description:
                     this method is using cash data in redis DB
@@ -79,7 +79,7 @@ class RedisOperations:
         for note in load_list:
             count += 1
             if note.get("id") == pk:
-                load_list.pop(count-1)
+                load_list.pop(count - 1)
                 Redis().redis.set(user_id, json.dumps(load_list))
                 return
         else:
@@ -95,12 +95,7 @@ def verify_token(function):
             return resp
         token = request.META['HTTP_AUTHORIZATION']
         user_id = UserViwe.decode(token)
-        request.data.update({'user_id':user_id['user_id']})
+        request.data.update({'user_id': user_id['user_id']})
         return function(self, request)
+
     return wrapper
-
-
-
-
-
-
