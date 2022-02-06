@@ -12,14 +12,14 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from notes_app.serializers import NotesSerializer
 from notes_app.models import Notes
-from notes_app.utility import RedisOperations, verify_token
+from notes_app.utility import RedisOperations, JWTToke
 
 
 class NotesAPIView(APIView):
     """
         Description: This Class using for Note app Operation
     """
-    @verify_token
+    @JWTToke.verify_token
     def post(self, request):
         """
             Description:
@@ -39,7 +39,7 @@ class NotesAPIView(APIView):
             logger.error(e)
             return Response({"message": "invalidate credentials"}, status=status.HTTP_400_BAD_REQUEST)
 
-    @verify_token
+    @JWTToke.verify_token
     def get(self, request):
         """
            Description:
@@ -62,7 +62,7 @@ class NotesAPIView(APIView):
             print(e)
             return Response({"message": "invalidate credentials"}, status=status.HTTP_400_BAD_REQUEST)
 
-    @verify_token
+    @JWTToke.verify_token
     def put(self, request):
         """
            Description:
@@ -82,7 +82,7 @@ class NotesAPIView(APIView):
             logger.error(e)
             return Response({"message": "invalidate credentials"}, status=status.HTTP_400_BAD_REQUEST)
 
-    @verify_token
+    @JWTToke.verify_token
     def delete(self, request):
         """
            Description:

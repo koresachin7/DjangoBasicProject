@@ -17,7 +17,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from .serializers import UserSerializer
 from .task import send_mail
-from .utility import UserViwe
+from .utility import JwtEnodeDecode
 
 
 class UserRegistration(APIView):
@@ -65,7 +65,7 @@ class Login(APIView):
                     'exp': datetime.datetime.utcnow() + datetime.timedelta(minutes=600),
                     'iat': datetime.datetime.utcnow()
                 }
-                token = UserViwe.encode(payload)
+                token = JwtEnodeDecode.encode(payload)
                 return Response({"message": "login successfully", 'token': token}, status=status.HTTP_200_OK)
             else:
                 return Response({"message": "User is invalid", "data": data}, status=status.HTTP_400_BAD_REQUEST)

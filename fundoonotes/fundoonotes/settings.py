@@ -40,6 +40,7 @@ INSTALLED_APPS = [
     'corsheaders',
     'django_celery_results',
     'rest_framework',
+    'rest_framework_swagger',
     'notes_app',
 
 ]

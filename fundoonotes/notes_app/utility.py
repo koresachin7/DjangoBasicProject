@@ -5,7 +5,7 @@ from rest_framework.response import Response
 
 from notes_app.redis import Redis
 from loghandler import logger
-from users.utility import UserViwe
+from users.utility import JwtEnodeDecode
 
 
 class RedisOperations:
@@ -86,16 +86,17 @@ class RedisOperations:
             raise ObjectDoesNotExist
 
 
-def verify_token(function):
-    def wrapper(self, request):
-        if 'HTTP_AUTHORIZATION' not in request.META:
-            resp = Response({'message': 'Token not provided in the header'})
-            resp.status_code = 400
-            logger.info('Token not provided in the header')
-            return resp
-        token = request.META['HTTP_AUTHORIZATION']
-        user_id = UserViwe.decode(token)
-        request.data.update({'user_id': user_id['user_id']})
-        return function(self, request)
+class JWTToke:
+    def verify_token(function):
+        def wrapper(self, request):
+            if 'HTTP_AUTHORIZATION' not in request.META:
+                resp = Response({'message': 'Token not provided in the header'})
+                resp.status_code = 400
+                logger.info('Token not provided in the header')
+                return resp
+            token = request.META['HTTP_AUTHORIZATION']
+            user_id = JwtEnodeDecode.decode(token)
+            request.data.update({'user_id': user_id['user_id']})
+            return function(self, request)
 
-    return wrapper
+        return wrapper
