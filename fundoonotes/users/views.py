@@ -6,6 +6,7 @@
 import json
 import datetime
 
+from drf_yasg import openapi
 from rest_framework.exceptions import ValidationError
 
 from loghandler import logger
@@ -13,6 +14,7 @@ from django.contrib.auth.models import auth
 # third party imports
 
 from rest_framework import status
+from drf_yasg.utils import swagger_auto_schema
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from .serializers import UserSerializer
@@ -21,7 +23,21 @@ from .utility import JwtEnodeDecode
 
 
 class UserRegistration(APIView):
-
+    @swagger_auto_schema(manual_parameters=[
+        openapi.Parameter('TOKEN', openapi.IN_HEADER, "token", type=openapi.TYPE_STRING)
+    ],
+        request_body=openapi.Schema(
+            type=openapi.TYPE_OBJECT,
+            properties={
+                'username': openapi.Schema(type=openapi.TYPE_STRING, description="username"),
+                'first_name': openapi.Schema(type=openapi.TYPE_STRING, description="first_name"),
+                'last_name': openapi.Schema(type=openapi.TYPE_STRING, description="last_name"),
+                'password': openapi.Schema(type=openapi.TYPE_STRING, description="password"),
+                'email': openapi.Schema(type=openapi.TYPE_STRING, description="email"),
+                'age': openapi.Schema(type=openapi.TYPE_STRING, description="age"),
+                'mobile': openapi.Schema(type=openapi.TYPE_STRING, description="mobile"),
+            }
+        ))
     def post(self, request):
         """
             Description:
@@ -47,6 +63,16 @@ class UserRegistration(APIView):
 
 
 class Login(APIView):
+    @swagger_auto_schema(manual_parameters=[
+        openapi.Parameter('TOKEN', openapi.IN_HEADER, "token", type=openapi.TYPE_STRING)
+    ],
+        request_body=openapi.Schema(
+            type=openapi.TYPE_OBJECT,
+            properties={
+                'username': openapi.Schema(type=openapi.TYPE_STRING, description="username"),
+                'password': openapi.Schema(type=openapi.TYPE_STRING, description="password"),
+            }
+        ))
     def post(self, request):
         """
                 Description:
@@ -61,7 +87,7 @@ class Login(APIView):
             user = auth.authenticate(username=username, password=password)
             if user is not None:
                 payload = {
-                    'user_id':user.id,
+                    'user_id': user.id,
                     'exp': datetime.datetime.utcnow() + datetime.timedelta(minutes=600),
                     'iat': datetime.datetime.utcnow()
                 }

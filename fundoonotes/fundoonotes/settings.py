@@ -40,10 +40,19 @@ INSTALLED_APPS = [
     'corsheaders',
     'django_celery_results',
     'rest_framework',
-    'rest_framework_swagger',
+    'drf_yasg',
     'notes_app',
 
 ]
+SWAGGER_SETTINGS = {
+    'SECURITY_DEFINITIONS': {
+        "Auth Token eg [Bearer (JWT) ]": {
+            "type": "apiKey",
+            "name": "Authorization",
+            "in": "header"
+        }
+    }
+}
 # CORS_ALLOWED_ORIGINS = [
 #    '*'
 # ]
