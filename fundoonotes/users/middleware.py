@@ -62,5 +62,4 @@ class JSONTranslationMiddleware:
 
         header = dataset[0].keys()
         rows = [x.values() for x in dataset]
-        print(tabulate(rows, header, tablefmt='rst'))
         logger.info(tabulate(rows, header, tablefmt='rst'))

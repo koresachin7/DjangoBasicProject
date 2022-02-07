@@ -5,6 +5,9 @@
 """
 import json
 
+from drf_yasg import openapi
+from drf_yasg.utils import swagger_auto_schema
+
 from loghandler import logger
 # third party imports
 from rest_framework import status
@@ -19,6 +22,16 @@ class NotesAPIView(APIView):
     """
         Description: This Class using for Note app Operation
     """
+    @swagger_auto_schema(manual_parameters=[
+        openapi.Parameter('TOKEN', openapi.IN_HEADER, "token", type=openapi.TYPE_STRING)
+    ],
+        request_body=openapi.Schema(
+            type=openapi.TYPE_OBJECT,
+            properties={
+                'title': openapi.Schema(type=openapi.TYPE_STRING, description="title"),
+                'description': openapi.Schema(type=openapi.TYPE_STRING, description="description")
+            }
+        ))
     @JWTToke.verify_token
     def post(self, request):
         """
@@ -39,6 +52,9 @@ class NotesAPIView(APIView):
             logger.error(e)
             return Response({"message": "invalidate credentials"}, status=status.HTTP_400_BAD_REQUEST)
 
+    @swagger_auto_schema(manual_parameters=[
+        openapi.Parameter('TOKEN', openapi.IN_HEADER, "token", type=openapi.TYPE_STRING)
+    ])
     @JWTToke.verify_token
     def get(self, request):
         """
@@ -62,6 +78,17 @@ class NotesAPIView(APIView):
             print(e)
             return Response({"message": "invalidate credentials"}, status=status.HTTP_400_BAD_REQUEST)
 
+    @swagger_auto_schema(manual_parameters=[
+        openapi.Parameter('TOKEN', openapi.IN_HEADER, "token", type=openapi.TYPE_STRING)
+    ],
+        request_body=openapi.Schema(
+            type=openapi.TYPE_OBJECT,
+            properties={
+                'id': openapi.Schema(type=openapi.TYPE_STRING, description="id"),
+                'title': openapi.Schema(type=openapi.TYPE_STRING, description="title"),
+                'description': openapi.Schema(type=openapi.TYPE_STRING, description="description")
+            }
+        ))
     @JWTToke.verify_token
     def put(self, request):
         """
@@ -82,6 +109,15 @@ class NotesAPIView(APIView):
             logger.error(e)
             return Response({"message": "invalidate credentials"}, status=status.HTTP_400_BAD_REQUEST)
 
+    @swagger_auto_schema(manual_parameters=[
+        openapi.Parameter('TOKEN', openapi.IN_HEADER, "token", type=openapi.TYPE_STRING)
+    ],
+        request_body=openapi.Schema(
+            type=openapi.TYPE_OBJECT,
+            properties={
+                'id': openapi.Schema(type=openapi.TYPE_INTEGER, description="id"),
+            }
+        ))
     @JWTToke.verify_token
     def delete(self, request):
         """
@@ -101,4 +137,6 @@ class NotesAPIView(APIView):
                 return Response({"message": "ID is invalid"}, status=status.HTTP_403_FORBIDDEN)
         except Exception as e:
             logger.error(e)
+            print(e)
             return Response({"message": "invalidate credentials"}, status=status.HTTP_400_BAD_REQUEST)
+
