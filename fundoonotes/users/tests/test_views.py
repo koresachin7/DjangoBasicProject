@@ -17,6 +17,7 @@ class TestUser:
         user = {"username": "sk101", "first_name": "sachin", "last_name": "kore",
                 "password": "kore123", "email": "sachin@gmail.com", "age": 25, "mobile": 1111111111}
         response = client.post(url, user)
+        print(response)
         assert response.status_code == 201
 
     def test_login_validation(self, client):

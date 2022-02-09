@@ -91,6 +91,7 @@ class Login(APIView):
                     'exp': datetime.datetime.utcnow() + datetime.timedelta(minutes=600),
                     'iat': datetime.datetime.utcnow()
                 }
+                print(user.id)
                 token = JwtEnodeDecode.encode(payload)
                 return Response({"message": "login successfully", 'token': token}, status=status.HTTP_200_OK)
             else:
@@ -101,3 +102,26 @@ class Login(APIView):
         except Exception as e:
             logger.error(e)
             return Response({"message": "User is invalid"}, status=status.HTTP_403_FORBIDDEN)
+
+# from rest_framework import generics
+# from .models import User
+# from .serializers import UserSerializer
+# from rest_framework import permissions
+#
+#
+# class UserRegistrationGenerics(generics.CreateAPIView):
+#     queryset = User.objects.all()
+#     serializer_class = UserSerializer
+#
+#     def perform_create(self, serializer):
+#         return serializer.save(id=self.request.data.get("id"))
+#
+#
+# class LoginGenerics(generics.CreateAPIView):
+#     queryset = User.objects.all()
+#     serializer_class = UserSerializer
+#     permissions = [permissions.IsAuthenticated]
+#
+#     def preform_create(self):
+#         return self.queryset.fliter(username=self.request.data.get("username"),
+#                                     password=self.request.data.get("password"))

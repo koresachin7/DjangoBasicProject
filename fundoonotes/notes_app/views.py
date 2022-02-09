@@ -1,142 +1,54 @@
+
 """
 * @Author: Sachin S Kore
-* @Date: 2022-2-02
+* @Date: 2022-2-09
 * @Title : CRUD operation in class function
 """
-import json
 
-from drf_yasg import openapi
-from drf_yasg.utils import swagger_auto_schema
-
-from loghandler import logger
-# third party imports
-from rest_framework import status
-from rest_framework.response import Response
-from rest_framework.views import APIView
-from notes_app.serializers import NotesSerializer
-from notes_app.models import Notes
-from notes_app.utility import RedisOperations, JWTToke
+from rest_framework import generics
+from .serializers import NotesSerializer
+from .models import Notes
+from rest_framework import permissions
+from .permissions import IsOwner
 
 
-class NotesAPIView(APIView):
-    """
-        Description: This Class using for Note app Operation
-    """
-    @swagger_auto_schema(manual_parameters=[
-        openapi.Parameter('TOKEN', openapi.IN_HEADER, "token", type=openapi.TYPE_STRING)
-    ],
-        request_body=openapi.Schema(
-            type=openapi.TYPE_OBJECT,
-            properties={
-                'title': openapi.Schema(type=openapi.TYPE_STRING, description="title"),
-                'description': openapi.Schema(type=openapi.TYPE_STRING, description="description")
-            }
-        ))
-    @JWTToke.verify_token
-    def post(self, request):
+class NotesListGenericsAPIView(generics.ListCreateAPIView):
+
+    queryset = Notes.objects.all()
+    serializer_class = NotesSerializer
+    permission = (permissions.IsAuthenticated,)
+
+    def perform_create(self, serializer):
+        """
+           Description:
+                    This method use for post data
+        """
+        return serializer.save(id=self.request.data.get("id"))
+
+    def get_queryset(self):
         """
             Description:
-                This method is writing Registration of user to inserting data
-            Parameter:
-                using json
-            :return : Response
+                    This method use for get data
         """
-        try:
-            serializer = NotesSerializer(data=request.data)
-            serializer.is_valid(raise_exception=True)
-            serializer.save()
-            RedisOperations().post_to_cache(request.data.get("user_id"), serializer.data)
-            return Response({"message": "Note Creating Successfully ", "data": serializer.data},
-                            status=status.HTTP_201_CREATED)
-        except Exception as e:
-            logger.error(e)
-            return Response({"message": "invalidate credentials"}, status=status.HTTP_400_BAD_REQUEST)
+        return self.queryset.filter(user_id=self.request.data.get("user_id"))
 
-    @swagger_auto_schema(manual_parameters=[
-        openapi.Parameter('TOKEN', openapi.IN_HEADER, "token", type=openapi.TYPE_STRING)
-    ])
-    @JWTToke.verify_token
-    def get(self, request):
-        """
-           Description:
-                       this method is created for retrieve data
-           :param request: format of the request
-           :return: Response
-        """
-        try:
-            notes_list = RedisOperations().get_to_cashe(request.data.get("user_id"))
-            if notes_list is not None:
-                return Response({"message": "get Note Data in cache DB  Successfully ", "data": json.loads(notes_list)},
-                                status=status.HTTP_201_CREATED)
-            else:
-                notes = Notes.objects.filter(user_id=request.data.get("user_id"))
-                serializer = NotesSerializer(notes, many=True)
-                return Response({"message": "get Note Data  Successfully ", "data": serializer.data},
-                                status=status.HTTP_201_CREATED)
-        except Exception as e:
-            logger.error(e)
-            print(e)
-            return Response({"message": "invalidate credentials"}, status=status.HTTP_400_BAD_REQUEST)
 
-    @swagger_auto_schema(manual_parameters=[
-        openapi.Parameter('TOKEN', openapi.IN_HEADER, "token", type=openapi.TYPE_STRING)
-    ],
-        request_body=openapi.Schema(
-            type=openapi.TYPE_OBJECT,
-            properties={
-                'id': openapi.Schema(type=openapi.TYPE_STRING, description="id"),
-                'title': openapi.Schema(type=openapi.TYPE_STRING, description="title"),
-                'description': openapi.Schema(type=openapi.TYPE_STRING, description="description")
-            }
-        ))
-    @JWTToke.verify_token
-    def put(self, request):
-        """
-           Description:
-                      this method is update for using retrieve data
-           :param request: format of the request
-           :return: Response
-        """
-        try:
-            notes = Notes.objects.get(id=request.data.get("id"))
-            serializer = NotesSerializer(instance=notes, data=request.data)
-            serializer.is_valid(raise_exception=True)
-            serializer.save()
-            RedisOperations().put_to_cashe(request.data.get("user_id"), serializer.data)
-            return Response({"message": "Note Update Successfully ", "data": serializer.data},
-                            status=status.HTTP_201_CREATED)
-        except Exception as e:
-            logger.error(e)
-            return Response({"message": "invalidate credentials"}, status=status.HTTP_400_BAD_REQUEST)
+class NotesDetailGenericsAPIView(generics.RetrieveUpdateDestroyAPIView):
+    serializer_class = NotesSerializer
+    queryset = Notes.objects.all()
+    permissions = (permissions.IsAuthenticated,IsOwner,)
+    lookup_field = "id"
 
-    @swagger_auto_schema(manual_parameters=[
-        openapi.Parameter('TOKEN', openapi.IN_HEADER, "token", type=openapi.TYPE_STRING)
-    ],
-        request_body=openapi.Schema(
-            type=openapi.TYPE_OBJECT,
-            properties={
-                'id': openapi.Schema(type=openapi.TYPE_INTEGER, description="id"),
-            }
-        ))
-    @JWTToke.verify_token
-    def delete(self, request):
+    def perform_create(self, serializer):
         """
-           Description:
-                     this method is delete for using  retrieve data
-           :param request: format of the request
-           :return: Response
+            Description:
+                    This method use for put data
         """
+        return serializer.save(data=self.request.data)
 
-        try:
-            notes = Notes.objects.get(id=request.data.get("id"))
-            if notes is not None:
-                notes.delete()
-                RedisOperations().delete_to_cashe(request.data.get("id"), request.data.get("user_id"))
-                return Response({"message": "Delete successfully"}, status=status.HTTP_200_OK)
-            else:
-                return Response({"message": "ID is invalid"}, status=status.HTTP_403_FORBIDDEN)
-        except Exception as e:
-            logger.error(e)
-            print(e)
-            return Response({"message": "invalidate credentials"}, status=status.HTTP_400_BAD_REQUEST)
-
+    def get_queryset(self):
+        """
+            Description:
+                    This method use for delete data
+        """
+        return self.queryset.filter(id=self.request.data.get("id"))
