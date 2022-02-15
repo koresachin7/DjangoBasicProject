@@ -7,7 +7,7 @@ from django.conf import settings
 
 @shared_task(bind=True)
 def send_mail(self, email):
-    users = User.objects.filter(email).frist()
+    users = User.objects.filter(email)
     for user in users:
         subject = 'welcome to Fundoonotes'
         message = f' {user.username}, Thanks you for joining our Fundoonotes'

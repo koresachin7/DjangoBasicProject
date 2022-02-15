@@ -1,6 +1,7 @@
 import json
 
 from django.core.exceptions import ObjectDoesNotExist
+from django.http import QueryDict
 from rest_framework.response import Response
 
 from notes_app.redis import Redis
@@ -96,6 +97,8 @@ class JWTToke:
                 return resp
             token = request.META['HTTP_AUTHORIZATION']
             user_id = JwtEnodeDecode.decode(token)
+            if isinstance(request.data, QueryDict):
+                request.data._mutable = True
             request.data.update({'user_id': user_id['user_id']})
             return function(self, request)
 
