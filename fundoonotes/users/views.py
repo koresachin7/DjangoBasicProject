@@ -50,7 +50,7 @@ class UserRegistration(APIView):
             serializer = UserSerializer(data=request.data)
             if serializer.is_valid(raise_exception=True):
                 serializer.create(validate_data=serializer.data)
-                send_mail.delay(serializer.data.get("email"))
+                # send_mail.delay(serializer.data.get("email"))
                 return Response({"message": "User Creating Successfully ", "data": serializer.data["username"]},
                                 status=status.HTTP_201_CREATED)
         except ValidationError as e:
@@ -81,7 +81,7 @@ class Login(APIView):
                         using Dictionary
             """
         try:
-            data = json.loads(request.body)
+            data = request.data
             username = data.get("username")
             password = data.get("password")
             user = auth.authenticate(username=username, password=password)
@@ -101,7 +101,7 @@ class Login(APIView):
             return Response({"message": "validation error"}, status=status.HTTP_403_FORBIDDEN)
         except Exception as e:
             logger.error(e)
-            return Response({"message": "User is invalid"}, status=status.HTTP_403_FORBIDDEN)
+            return Response({"message": str(e)}, status=status.HTTP_403_FORBIDDEN)
 
 # from rest_framework import generics
 # from .models import User
